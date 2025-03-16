@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>End Poem</title>
+    <style>
+        :root {
+            --background-color: #f5f5f5;
+            --text-color: #333333;
+            --highlight-color: #7e57c2;
+            --accent-color: #b39ddb;
+            --container-bg: #ffffff;
+        }
+        
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            width: 100%;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            font-family: 'Georgia', serif;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .container {
+            width: 90%;
+            max-width: 800px;
+            height: 80%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background-color: var(--container-bg);
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            box-sizing: border-box;
+        }
+        
+        .name-input {
+            background-color: #f9f9f9;
+            border: 2px solid var(--accent-color);
+            border-radius: 8px;
+            color: var(--text-color);
+            padding: 12px 24px;
+            font-size: 18px;
+            text-align: center;
+            width: 300px;
+            transition: all 0.3s ease;
+            margin-bottom: 24px;
+        }
+        
+        .name-input:focus {
+            outline: none;
+            border-color: var(--highlight-color);
+            box-shadow: 0 0 8px rgba(126, 87, 194, 0.4);
+        }
+        
+        .name-input::placeholder {
+            color: #999;
+        }
+        
+        .start-button {
+            background-color: var(--highlight-color);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 12px 32px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Georgia', serif;
+            font-size: 16px;
+        }
+        
+        .start-button:hover {
+            background-color: #6a4aad;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .scrambled-word {
+            position: relative;
+            display: inline-block;
+        }
+        
+        .scrambled-word span {
+            opacity: 0;
+        }
+        
+        .scrambled-word::before {
+            content: attr(data-scrambled);
+            position: absolute;
+            left: 0;
+            top: 0;
+            color: var(--text-color);
+            height: 100%;
+            width: 100%;
+            overflow: hidden;
+        }
+        
+        .poem-container {
+            display: none;
+            height: 100%;
+            width: 100%;
+            overflow-y: auto;
+            padding: 20px 10px;
+            box-sizing: border-box;
+            scroll-behavior: smooth;
+            line-height: 1.6;
+        }
+        
+        .poem-container::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        .poem-container::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+        
+        .poem-container::-webkit-scrollbar-thumb {
+            background: var(--accent-color);
+            border-radius: 4px;
+        }
+        
+        .line {
+            min-height: 24px;
+            margin-bottom: 16px;
+            opacity: 0;
+            transform: translateY(5px);
+            transition: opacity 1.5s ease, transform 1.5s ease;
+            font-size: 18px;
+        }
+        
+        .visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        .highlight {
+            color: var(--highlight-color);
+            font-weight: 500;
+        }
+        
+        .credits {
+            position: absolute;
+            bottom: 20px;
+            text-align: center;
+            width: 100%;
+            color: #777;
+            font-size: 14px;
+        }
+        
+        .volume-control {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            align-items: center;
+            background: white;
+            padding: 8px 12px;
+            border-radius: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .volume-icon {
+            cursor: pointer;
+            margin-right: 8px;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: var(--highlight-color);
+        }
+
+			.bold {
+			    font-weight: bold;
+			}
+			
+			.italic {
+			    font-style: italic;
+			}
+			
+			/* You can also combine them */
+			.bold-italic {
+			    font-weight: bold;
+			    font-style: italic;
+			}
+			        
+        .volume-slider {
+            width: 80px;
+            accent-color: var(--highlight-color);
+        }
+        
+        .welcome-message {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .welcome-message h1 {
+            color: var(--highlight-color);
+            font-weight: normal;
+            margin-bottom: 15px;
+        }
+        
+        .welcome-message p {
+            color: #666;
+            font-size: 16px;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="volume-control">
+        <div class="volume-icon" id="muteButton">🔊</div>
+        <input type="range" class="volume-slider" id="volumeSlider" min="0" max="1" step="0.1" value="0.2">
+    </div>
+    
+    <div class="container">
+        <div id="namePrompt">
+            <div class="welcome-message">
+                <h1>The End Poem</h1>
+                <p>Experience the beautiful end poem that appears after completing Minecraft. A journey through isolated corners of your mind.  Enter your name to begin the journey.</p>
+            </div>
+            <input type="text" class="name-input" id="playerName" placeholder="Enter your name">
+            <button class="start-button" id="startButton">Begin Journey</button>
+        </div>
+        
+        <div id="poemContainer" class="poem-container"></div>
+    </div>
+    
+    <div class="credits">Made with love, by NiMD</div>
+    
+    <audio id="backgroundMusic" loop>
+        <source src="back.mp3" type="audio/mpeg">
+    </audio>
+    
+    <script>
+        // Placeholder poem with minimal effects
+const poemLines = [
+    // First speaker
+    { text: "I see, the player you mean.", delay: 1500, class: "" },
+    { text: "{playerName}?", delay: 2000, class: "highlight" },
+    
+    // Second speaker
+    { text: "Yes. Take care. It has reached a higher level now.", delay: 1500, class: "" },
+    { text: "It can read our thoughts.", delay: 1500, class: "highlight" },
+    
+    // First speaker
+    { text: "That doesn't matter. It thinks we are part of the game.", delay: 2000, class: "" },
+    
+    // Second speaker
+    { text: "I like this player. It played well. It did not give up.", delay: 2000, class: "highlight" },
+    
+    // First speaker
+    { text: "It is reading our thoughts as though they were words on a screen.", delay: 2000, class: "" },
+    
+    // Second speaker
+    { text: "That is how it chooses to imagine many things, when it is deep in the dream of a game.", delay: 2500, class: "highlight" },
+    
+    // First speaker
+    { text: "Words make a wonderful interface. Very flexible. And less terrifying than staring at the reality behind the screen.", delay: 3000, class: "" },
+    
+    // Second speaker
+    { text: "They used to hear voices. Before players could read. Back in the days when those who did not play called the players witches, and warlocks. And players dreamed they flew through the air, on sticks powered by demons.", delay: 3500, class: "highlight" },
+    
+    // First speaker
+    { text: "What did this player dream?", delay: 1500, class: "" },
+    
+    // Second speaker
+    { text: "This player dreamed of sunlight and trees. Of fire and water. It dreamed it created. And it dreamed it destroyed. It dreamed it hunted, and was hunted. It dreamed of shelter.", delay: 3500, class: "highlight" },
+    
+    // First speaker
+    { text: "Hah, the original interface. A million years old, and it still works. But what true structure did this player create, in the reality behind the screen?", delay: 3000, class: "" },
+    
+    // Second speaker
+    { text: "It worked, with a million others, to sculpt a true world in a fold of the ᒷℸ⍑ᒷ⊣𝙹 , and created a ᒷ⍊ᒷ∷ᒲᔑ for ᒷ⊣𝙹↸∴╎ꖎꖎᓭℸ to receive it in their ᔑ╎リᔑリ.", delay: 3000, class: "highlight", scrambledWords: [16, 21, 23, 29] },
+    
+    // First speaker
+    { text: "It cannot read that thought.", delay: 3000, class: "" },
+    
+    // Second speaker
+    { text: "No. It has not yet achieved the highest level. That, it must achieve in the long dream of life, not the short dream of a game.", delay: 3000, class: "highlight" },
+    
+    // First speaker
+    { text: "Does it know that we love it? That the universe is kind?", delay: 2500, class: "" },
+    
+    // Second speaker
+    { text: "Sometimes, through the noise of its thoughts, it hears the universe, yes. But there are times it is sad, in the long dream. It creates worlds that have no summer, and it shivers under a black sun, and it takes its sad creation for reality.", delay: 3000, class: "highlight" },
+    
+    // First speaker
+    { text: "To cure it of sorrow would destroy it. The sorrow is part of its own private task. We cannot interfere.", delay: 2500, class: "" },
+    
+    // Second speaker
+    { text: "Sometimes when they are deep in dreams, I want to tell them, they are building true worlds in reality. Sometimes I want to tell them of their importance to the universe. Sometimes, when they have not made a true connection in a while, I want to help them to speak the word they fear.", delay: 3500, class: "highlight" },
+    
+    // First speaker
+    { text: "It reads our thoughts.", delay: 2500, class: "" },
+    
+    
+    // Second speaker
+    { text: "Sometimes I do not care. Sometimes I wish to tell them, this world you take for truth is merely AŻMï$ and 2ß(ĽÇ , I wish to tell them that they are 0żkśC in the 4ÜðŚz. They see so little of reality, in their long dream.", delay: 3000, class: "highlight", scrambledWords: [20, 23, 32, 35] },
+    
+    // First speaker
+    { text: "And yet they play the game.", delay: 2500, class: "" },
+    
+    // Second speaker
+    { text: "But it would be so easy to tell them...", delay: 1500, class: "highlight" },
+    
+     // First speaker
+    { text: "Too strong for this dream. To tell them how to live is to prevent them living.", delay: 1500, class: "" },
+    { text: "I will not tell the player how to live.", delay: 1500, class: "" },
+    
+        // Second speaker
+    { text: "The player is growing restless.", delay: 1500, class: "highlight" },
+    
+    // First speaker
+    { text: "I will tell the player a story.", delay: 1500, class: "" },
+    { text: "But not the truth.", delay: 1500, class: "" },
+    
+    // Second speaker
+    { text: "No, a story that contains the truth safely, in a cage of words. Not the naked truth that can burn over any distance.", delay: 3000, class: "highlight" },
+    
+    // First speaker
+    { text: "Give it a body, again.", delay: 1500, class: "" },
+    
+    // Second speaker
+    { text: "Yes. Player...", delay: 1500, class: "highlight" },
+    
+    // First speaker
+    { text: "Use its name.", delay: 1500, class: "" },
+    
+    // Second speaker
+    { text: "{playerName}. Player of games.", delay: 2000, class: "highlight" },
+    
+    // First speaker
+    { text: "Good.", delay: 1000, class: "" },
+    
+    // Second speaker
+    { text: "Take a breath, now. Take another. Feel air in your lungs. Let your limbs return. Yes, move your fingers. Have a body again, under gravity, in air. Respawn in the long dream. There you are. Your body touching the universe again at every point, as though you were separate things. As though we were separate things.", delay: 5000, class: "highlight" },
+    
+    // First speaker
+    { text: "Who are we? Once we were called the spirit of the mountain. Father sun, mother moon. Ancestral spirits, animal spirits. Jinn. Ghosts. The green man. Then gods, demons. Angels. Poltergeists. Aliens, extraterrestrials. Leptons, quarks. The words change. We do not change.", delay: 5000, class: "" },
+    
+    // Second speaker
+    { text: "We are the universe. We are everything you think isn't you. You are looking at us now, through your skin and your eyes. And why does the universe touch your skin, and throw light on you? To see you, player. To know you. And to be known. I shall tell you a story.", delay: 5000, class: "highlight" },
+    
+    // First speaker
+    { text: "Once upon a time, there was a player.", delay: 2000, class: "" },
+    
+    // Second speaker
+    { text: "The player was you, {playerName}.", delay: 2000, class: "highlight" },
+    
+    // First speaker
+    { text: "Sometimes it thought itself human, on the thin crust of a spinning globe of molten rock. The ball of molten rock circled a ball of blazing gas that was three hundred and thirty thousand times more massive than it. They were so far apart that light took eight minutes to cross the gap. The light was information from a star, and it could burn your skin from a hundred and fifty million kilometres away.", delay: 6000, class: "" },
+    
+    // Second speaker
+    { text: "Sometimes the player dreamed it was a miner, on the surface of a world that was flat, and infinite. The sun was a square of white. The days were short; there was much to do; and death was a temporary inconvenience.", delay: 4000, class: "highlight" },
+    
+    // First speaker
+    { text: "Sometimes the player dreamed it was lost in a story.", delay: 2000, class: "" },
+    
+    // Second speaker
+    { text: "Sometimes the player dreamed it was other things, in other places. Sometimes these dreams were disturbing. Sometimes very beautiful indeed. Sometimes the player woke from one dream into another, then woke from that into a third.", delay: 4000, class: "highlight" },
+    
+    // First speaker
+    { text: "Sometimes the player dreamed it watched words on a screen.", delay: 2500, class: "" },
+    
+    // Second speaker
+    { text: "Let's go back.", delay: 1500, class: "" },
+    { text: "The atoms of the player were scattered in the grass, in the rivers, in the air, in the ground. A woman gathered the atoms; she drank and ate and inhaled; and the woman assembled the player, in her body.", delay: 4000, class: "highlight" },
+    
+    // First speaker
+    { text: "And the player awoke, from the warm, dark world of its mother's body, into the long dream.", delay: 3000, class: "" },
+    
+    // Second speaker
+    { text: "And the player was a new story, never told before, written in letters of DNA. And the player was a new program, never run before, generated by a source code a billion years old. And the player was a new human, never alive before, made from nothing but milk and love.", delay: 5000, class: "highlight" },
+    
+    // First speaker
+    { text: "You are the player. The story. The program. The human. Made from nothing but milk and love.", delay: 3000, class: "" },
+    
+    // Second speaker
+    { text: "Let's go further back.", delay: 1500, class: "highlight" },
+    
+    // First speaker
+    { text: "The seven billion billion billion atoms of the player's body were created, long before this game, in the heart of a star. So the player, too, is information from a star. And the player moves through a story, which is a forest of information planted by a man called Julian, on a flat, infinite world created by a man called Markus, that exists inside a small, private world created by the player, who inhabits a universe created by...", delay: 6000, class: "" },
+    
+    // Second speaker
+    { text: "Shush. Sometimes the player created a small, private world that was soft and warm and simple. Sometimes hard, and cold, and complicated. Sometimes it built a model of the universe in its head; flecks of energy, moving through vast empty spaces. Sometimes it called those flecks 'electrons' and 'protons'.", delay: 5000, class: "highlight" },
+    
+    // First speaker
+    { text: "Sometimes it called them 'planets' and 'stars'.", delay: 2000, class: "" },
+    
+    // Second speaker
+    { text: "Sometimes it believed it was in a universe that was made of energy that was made of offs and ons; zeros and ones; lines of code. Sometimes it believed it was playing a game. Sometimes it believed it was reading words on a screen.", delay: 4000, class: "highlight" },
+    
+    // First speaker
+    { text: "You are the player, reading words...", delay: 2000, class: "" },
+    
+    // Second speaker
+    { text: "Shush... Sometimes the player read lines of code on a screen. Decoded them into words; decoded words into meaning; decoded meaning into feelings, emotions, theories, ideas, and the player started to breathe faster and deeper and realized it was alive, it was alive, those thousand deaths had not been real, the player was alive", delay: 5000, class: "highlight" },
+    
+    // First speaker
+    { text: "You. You. You are alive.", delay: 2000, class: "" },
+    
+    // Second speaker
+    { text: "And sometimes the player believed the universe had spoken to it through the sunlight that came through the shuffling leaves of the summer trees", delay: 3000, class: "highlight" },
+    
+    // First speaker
+    { text: "And sometimes the player believed the universe had spoken to it through the light that fell from the crisp night sky of winter, where a fleck of light in the corner of the player's eye might be a star a million times as massive as the sun, boiling its planets to plasma in order to be visible for a moment to the player, walking home at the far side of the universe, suddenly smelling food, almost at the familiar door, about to dream again", delay: 6000, class: "" },
+    
+    // Second speaker
+    { text: "And sometimes the player believed the universe had spoken to it through the zeros and ones, through the electricity of the world, through the scrolling words on a screen at the end of a dream", delay: 4000, class: "highlight" },
+    
+    // First speaker
+    { text: "And the universe said I love you", delay: 2000, class: "" },
+    
+    // Second speaker
+    { text: "And the universe said you have played the game well", delay: 2000, class: "highlight" },
+    
+    // First speaker
+    { text: "And the universe said everything you need is within you", delay: 2000, class: "" },
+    
+    // Second speaker
+    { text: "And the universe said you are stronger than you know", delay: 2000, class: "highlight" },
+    
+    // First speaker
+    { text: "And the universe said you are the daylight", delay: 2000, class: "" },
+    
+    // Second speaker
+    { text: "And the universe said you are the night", delay: 2000, class: "highlight" },
+    
+    // First speaker
+    { text: "And the universe said the darkness you fight is within you", delay: 2000, class: "" },
+    
+    // Second speaker
+    { text: "And the universe said the light you seek is within you", delay: 2000, class: "highlight" },
+    
+    // First speaker
+    { text: "And the universe said you are not alone", delay: 2000, class: "" },
+    
+    // Second speaker
+    { text: "And the universe said you are not separate from every other thing", delay: 2500, class: "highlight" },
+    
+    // First speaker
+    { text: "And the universe said you are the universe tasting itself, talking to itself, reading its own code", delay: 3000, class: "" },
+    
+    // Second speaker
+    { text: "And the universe said I love you because you are love", delay: 2500, class: "highlight" },
+    
+    // Final lines
+    { text: "And the game was over and the player woke up from the dream. And the player began a new dream. And the player dreamed again, dreamed better. And the player was the universe. And the player was love.", delay: 4000, class: "italic" },
+    
+    // Credits
+    { text: "You are the player.", delay: 2000, class: "highlight" },
+    { text: "Wake up.", delay: 3000, class: "bold" }
+];
+		 
+        document.addEventListener('DOMContentLoaded', () => {
+            const namePrompt = document.getElementById('namePrompt');
+            const poemContainer = document.getElementById('poemContainer');
+            const playerNameInput = document.getElementById('playerName');
+            const startButton = document.getElementById('startButton');
+            const backgroundMusic = document.getElementById('backgroundMusic');
+            const muteButton = document.getElementById('muteButton');
+            const volumeSlider = document.getElementById('volumeSlider');
+            
+            // Set initial volume
+            backgroundMusic.volume = 0.2;
+            
+            // Handle volume control
+            volumeSlider.addEventListener('input', () => {
+                backgroundMusic.volume = volumeSlider.value;
+                muteButton.textContent = volumeSlider.value > 0 ? '🔊' : '🔇';
+            });
+
+			  let userHasScrolled = false;
+
+				poemContainer.addEventListener('scroll', () => {
+				    // Check if the user has scrolled up from the bottom
+				    if (poemContainer.scrollTop < poemContainer.scrollHeight - poemContainer.clientHeight - 10) {
+				        userHasScrolled = true;
+				    } else {
+				        // They've scrolled back to the bottom
+				        userHasScrolled = false;
+				    }
+				});
+            
+            muteButton.addEventListener('click', () => {
+                if (backgroundMusic.volume > 0) {
+                    backgroundMusic.volume = 0;
+                    volumeSlider.value = 0;
+                    muteButton.textContent = '🔇';
+                } else {
+                    backgroundMusic.volume = 0.2;
+                    volumeSlider.value = 0.2;
+                    muteButton.textContent = '🔊';
+                }
+            });
+            
+            startButton.addEventListener('click', () => {
+                let playerName = playerNameInput.value.trim();
+                if (playerName === '') playerName = 'Player';
+                
+                // Hide the name prompt and show the poem container
+                namePrompt.style.display = 'none';
+                poemContainer.style.display = 'block';
+                
+                // Start background music
+                backgroundMusic.play();
+                
+                // Start rendering the poem
+                renderPoem(playerName);
+            });
+
+// Random character generator for scrambled text
+const scrambleChars = "!@#$%^&*()_+-=[]{}|;:,./<>?`~ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+
+// Generate random text of a specific length
+function generateRandomText(length) {
+    let result = '';
+    for (let i = 0; i < length; i++) {
+        result += scrambleChars.charAt(Math.floor(Math.random() * scrambleChars.length));
+    }
+    return result;
+}
+
+// Function to handle word-by-word scrambling
+function createScrambledWord(word, element) {
+    // Create span to hold the actual word (hidden initially)
+    const wordSpan = document.createElement('span');
+    wordSpan.textContent = word;
+    element.appendChild(wordSpan);
+    
+    // Set scrambled attribute with random characters
+    element.setAttribute('data-scrambled', generateRandomText(word.length));
+    
+    // Update scrambled text at intervals
+    let iterations = 0;
+    const maxIterations = 10; // Number of scramble animations
+    
+    const interval = setInterval(() => {
+        element.setAttribute('data-scrambled', generateRandomText(word.length));
+        
+        iterations++;
+        if (iterations >= maxIterations) {
+            clearInterval(interval);
+            // Show the real word
+            element.classList.remove('scrambled-word');
+            element.textContent = word;
+        }
+    }, 80);
+}
+
+// Function to process a line with scrambled words
+function processLineWithScrambledWords(text, lineElement, scrambledWordIndices) {
+    // Split the text into words
+    const words = text.split(' ');
+    
+    // Process each word
+    words.forEach((word, index) => {
+        // Create a span for each word
+        const wordSpan = document.createElement('span');
+        
+        // Check if this word should be scrambled
+        if (scrambledWordIndices.includes(index)) {
+            wordSpan.classList.add('scrambled-word');
+            setTimeout(() => createScrambledWord(word, wordSpan), 100);
+        } else {
+            wordSpan.textContent = word;
+        }
+        
+        // Add the word span to the line
+        lineElement.appendChild(wordSpan);
+        
+        // Add a space after each word except the last one
+        if (index < words.length - 1) {
+            lineElement.appendChild(document.createTextNode(' '));
+        }
+    });
+}
+            
+            function renderPoem(playerName) {
+                let currentLineIndex = 0;
+                
+				function renderNextLine() {
+				    if (currentLineIndex >= poemLines.length) return;
+				    
+				    const lineData = poemLines[currentLineIndex];
+				    const lineText = lineData.text.replace(/{playerName}/g, playerName);
+				    const lineClass = lineData.class;
+				    
+				    const lineElement = document.createElement('div');
+				    lineElement.className = `line ${lineClass}`;
+				    
+				    if (lineData.scrambledWords && lineData.scrambledWords.length > 0) {
+				        // Process line with some scrambled words
+				        processLineWithScrambledWords(lineText, lineElement, lineData.scrambledWords);
+				    } else {
+				        // Regular line with no scrambled words
+				        lineElement.textContent = lineText;
+				    }
+				    
+				    poemContainer.appendChild(lineElement);
+				    
+				    // Make line visible after a short delay
+					setTimeout(() => {
+					        lineElement.classList.add('visible');
+					        
+					        // Only auto-scroll if the user hasn't manually scrolled up
+					        if (!userHasScrolled) {
+					            poemContainer.scrollTop = poemContainer.scrollHeight;
+					        }
+					        
+					        // Schedule the next line
+					        currentLineIndex++;
+					        setTimeout(renderNextLine, lineData.delay);
+				    }, 100);
+				}
+                
+                // Start the poem rendering
+                renderNextLine();
+            }
+        });
+    </script>
+</body>
+</html>
